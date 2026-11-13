@@ -218,6 +218,24 @@ final class SpotifyModel: ObservableObject {
         refresh()
     }
 
+    /// Commit once at the end of a slider drag rather than sending AppleScript on every move.
+    func seek(to fraction: Double) {
+        guard available, fraction.isFinite, duration > 0 else { return }
+        let target = duration * min(1, max(0, fraction))
+        if demo {
+            objectWillChange.send()
+            position = target
+            sampledAt = Date()
+            return
+        }
+        guard execute("""
+        with timeout of 1 seconds
+            tell application id "com.spotify.client" to set player position to \(target)
+        end timeout
+        """) != nil else { return }
+        refresh()
+    }
+
     func command(_ command: Command) {
         guard available else { return }
         if demo {

@@ -53,7 +53,7 @@ struct AppearanceView: View {
                 Slider(value: $appearance.thickness, in: 1...4, step: 0.1)
                     .accessibilityLabel("Épaisseur du trait")
             }
-            Text("La taille du contour suit automatiquement l’épaisseur du trait, avec seulement 1 point de marge. Un trait fin garde le fond noir au plus près de l’encoche.")
+            Text("Le contour suit l’épaisseur du trait avec 1 point de marge. Les petites zones de chaque côté de l’encoche affichent la jaquette ou l’activité en cours.")
                 .font(.callout).foregroundStyle(.secondary)
             Button("Rétablir les valeurs par défaut") { appearance.reset() }
                 .buttonStyle(.plain)

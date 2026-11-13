@@ -29,6 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     private var panel: NotchPanel!
     private var statusItem: NSStatusItem!
     private var model: SpotifyModel!
+    private var calendar: CalendarModel!
+    private let focus = FocusModel()
     private let layout = NotchLayout()
     private let appearance = Appearance()
     private var settingsWindow: NSWindow?
@@ -51,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             return
         }
         model = SpotifyModel(demo: demo)
+        calendar = CalendarModel(demo: demo)
         panel = NotchPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.backgroundColor = .clear
         panel.isOpaque = false
@@ -61,19 +64,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         panel.acceptsMouseMovedEvents = true
         panel.isReleasedWhenClosed = false
         appearance.geometryChanged = { [weak self] in self?.positionOnScreen() }
-        let hostingView = HoverHostingView(rootView: NotchView(model: model, layout: layout, appearance: appearance))
+        layout.geometryChanged = { [weak self] in
+            guard let self, self.layout.expanded else { return }
+            self.resize()
+        }
+        focus.phaseChanged = { [weak self] in
+            guard self?.layout.renderActive == true else { return }
+            NSSound.beep()
+        }
+        let hostingView = HoverHostingView(rootView: NotchView(model: model, focus: focus, calendar: calendar, layout: layout, appearance: appearance))
         hostingView.hoverChanged = { [weak self] inside in
             guard let self else { return }
             self.collapseTask?.cancel()
             guard !self.suspended, !self.displaySleeping, !self.exportingScreenshots else { return }
             if inside {
                 self.setExpanded(true)
-            } else {
+            } else if !self.layout.pinned {
                 let task = DispatchWorkItem { [weak self] in
                     guard let self else { return }
                     self.collapseTask = nil
                     // Une seule lecture à la sortie évite un faux repli pendant le zoom.
-                    if !self.panel.frame.contains(NSEvent.mouseLocation) { self.setExpanded(false) }
+                    if !self.layout.pinned && !self.panel.frame.contains(NSEvent.mouseLocation) { self.setExpanded(false) }
                 }
                 self.collapseTask = task
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: task)
@@ -87,6 +98,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         let workspace = NSWorkspace.shared.notificationCenter
         workspace.addObserver(self, selector: #selector(displayDidSleep), name: NSWorkspace.screensDidSleepNotification, object: nil)
         workspace.addObserver(self, selector: #selector(displayDidWake), name: NSWorkspace.screensDidWakeNotification, object: nil)
+        if demo, let index = CommandLine.arguments.firstIndex(of: "--preview-output"),
+           CommandLine.arguments.count > index + 1 {
+            let folder = URL(fileURLWithPath: CommandLine.arguments[index + 1], isDirectory: true)
+            exportPreviews(to: folder)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -104,7 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             collapseTask?.cancel()
             collapseTask = nil
             setExpanded(true)
-        } else if layout.expanded && collapseTask == nil {
+        } else if layout.expanded && !layout.pinned && collapseTask == nil {
             layout.hoverChanged?(false)
         }
     }
@@ -117,6 +133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         let title = NSMenuItem(title: demo ? "Notch Musique · Simulation" : "Notch Musique · Spotify", action: nil, keyEquivalent: "")
         menu.addItem(title)
         menu.addItem(.separator())
+        add(menu, "Ouvrir le panneau…", action: #selector(openPanel))
         add(menu, "Ouvrir Spotify", action: #selector(openSpotify))
         add(menu, "Réessayer la connexion Spotify", action: #selector(retry))
         add(menu, "Apparence…", action: #selector(showAppearance), key: ",")
@@ -130,6 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         let mainMenu = NSMenu()
         let appItem = NSMenuItem(title: "Notch Musique", action: nil, keyEquivalent: "")
         let appMenu = NSMenu(title: "Notch Musique")
+        add(appMenu, "Ouvrir le panneau…", action: #selector(openPanel), key: "o")
         add(appMenu, "Apparence…", action: #selector(showAppearance), key: ",")
         add(appMenu, "Exporter des captures…", action: #selector(exportScreenshots))
         appMenu.addItem(.separator())
@@ -204,8 +222,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         guard notchWidth > 0 else { panel.orderOut(nil); setActivity(false); return }
         centerX = (left.maxX + right.minX) / 2
         topY = screen.frame.maxY
-        layout.width = notchWidth + appearance.margin * 2
-        layout.height = screen.safeAreaInsets.top + appearance.margin
+        // Keep the panel centered on the actual camera cutout and inside both screen edges.
+        let availableWidth = 2 * min(centerX - screen.frame.minX, screen.frame.maxX - centerX) - 16
+        layout.configure(notchWidth: notchWidth, notchHeight: screen.safeAreaInsets.top,
+                         margin: appearance.margin, availableWidth: availableWidth,
+                         availableHeight: screen.frame.height - 24)
         resize()
         if !suspended { panel.orderFrontRegardless() }
         setActivity(!suspended && !displaySleeping)
@@ -240,6 +261,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     private func setActivity(_ active: Bool) {
         if layout.renderActive != active { layout.renderActive = active }
         model.setActive(active)
+        focus.setVisible(active)
+        calendar.setActive(active)
         if active && hoverFallback == nil {
             // Secours tolérant pour les événements manqués autour du notch.
             let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.checkPointer() }
@@ -268,6 +291,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         }
     }
     @objc private func retry() { model.retry() }
+    @objc private func openPanel() {
+        suspended = false
+        layout.pinned = true
+        positionOnScreen()
+        setExpanded(true)
+    }
+
+    // Native demo renders for layout review; never reads real calendar data or controls Spotify.
+    private func exportPreviews(to folder: URL) {
+        guard panel.isVisible else { fputs("No notched screen available for previews.\n", stderr); exit(1) }
+        do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
+        catch { fputs("Cannot create preview folder.\n", stderr); exit(1) }
+        exportingScreenshots = true
+        layout.pinned = true
+        let steps: [(String, () -> Void)] = [
+            ("compact-media", { self.layout.expanded = false; self.resize() }),
+            ("media", { self.layout.tab = .media; self.setExpanded(true) }),
+            ("calendar", { self.layout.tab = .calendar }),
+            ("focus", { self.layout.tab = .focus }),
+            ("focus-running", { self.focus.toggle() }),
+            ("compact-focus", { self.layout.expanded = false; self.resize() })
+        ]
+        func render(_ index: Int) {
+            guard index < steps.count else { self.focus.reset(); NSApp.terminate(nil); return }
+            steps[index].1()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                guard let view = self.panel.contentView,
+                      let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { exit(1) }
+                view.needsDisplay = true
+                view.layoutSubtreeIfNeeded()
+                view.displayIfNeeded()
+                view.cacheDisplay(in: view.bounds, to: bitmap)
+                guard let png = bitmap.representation(using: .png, properties: [:]) else { exit(1) }
+                do { try png.write(to: folder.appendingPathComponent(steps[index].0 + ".png")) }
+                catch { exit(1) }
+                render(index + 1)
+            }
+        }
+        render(0)
+    }
     @objc private func exportScreenshots() {
         let picker = NSOpenPanel()
         picker.title = "Exporter les captures de Notch Musique"
@@ -287,6 +350,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         exportingScreenshots = true
         collapseTask?.cancel()
         let wasExpanded = layout.expanded
+        let previousTab = layout.tab
         let settingsWereVisible = settingsWindow?.isVisible == true
         var failures: [String] = []
         func save(_ view: NSView?, name: String) {
@@ -294,6 +358,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
                   let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
                 failures.append(name); return
             }
+            view.needsDisplay = true
+            view.layoutSubtreeIfNeeded()
+            view.displayIfNeeded()
             view.cacheDisplay(in: view.bounds, to: bitmap)
             guard let png = bitmap.representation(using: .png, properties: [:]) else {
                 failures.append(name); return
@@ -304,6 +371,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         setExpanded(false)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [self] in
             save(panel.contentView, name: "contour.png")
+            layout.tab = .media
             setExpanded(true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [self] in
                 save(panel.contentView, name: "lecteur.png")
@@ -311,6 +379,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [self] in
                     save(settingsWindow?.contentView, name: "apparence.png")
                     if !settingsWereVisible { settingsWindow?.close() }
+                    layout.tab = previousTab
                     setExpanded(wasExpanded)
                     exportingScreenshots = false
                     if failures.isEmpty {
@@ -379,7 +448,25 @@ if CommandLine.arguments.contains("--self-test") {
     let thumbnail = SpotifyModel.thumbnail(data: png as Data)
     precondition(thumbnail?.width == 128 && thumbnail?.height == 64, "La pochette doit être réduite en conservant ses proportions")
     precondition(SpotifyModel.thumbnail(data: Data([0, 1, 2])) == nil, "Une pochette invalide doit être ignorée")
-    print("10 vérifications réussies : lecture en simulation, réduction des pochettes et données invalides.")
+    model.command(.playpause)
+    model.seek(to: 0.5)
+    precondition(model.progress(at: now) == 0.5, "Seek en pause incorrect")
+    model.seek(to: 4)
+    precondition(model.progress(at: now) == 1, "Seek supérieur non borné")
+    model.seek(to: -1)
+    precondition(model.progress(at: now) == 0, "Seek inférieur non borné")
+    let utilities = runUtilitySelfTests()
+    print("\(13 + utilities) vérifications réussies : Spotify simulé, images, seek, transitions du focus et géométrie bornée.")
+    exit(0)
+}
+
+if CommandLine.arguments.contains("--screen-info") {
+    for screen in NSScreen.screens {
+        print("Screen: \(screen.localizedName), frame: \(screen.frame), safe top: \(screen.safeAreaInsets.top)")
+        if let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea {
+            print("Camera: x=\(left.maxX)...\(right.minX), width=\(right.minX - left.maxX)")
+        }
+    }
     exit(0)
 }
 

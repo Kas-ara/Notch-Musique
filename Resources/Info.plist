@@ -5,12 +5,17 @@
     <key>CFBundleIdentifier</key><string>local.notchmusique.app</string>
     <key>CFBundleName</key><string>Notch Musique</string>
     <key>CFBundleDisplayName</key><string>Notch Musique</string>
+    <key>CFBundleIconFile</key><string>AppIcon.icns</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.3.0</string>
-    <key>CFBundleVersion</key><string>3</string>
+    <key>CFBundleShortVersionString</key><string>0.4.0</string>
+    <key>CFBundleVersion</key><string>4</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>Notch Musique lit le morceau Spotify en cours et permet de contrôler sa lecture au survol de l’encoche.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Notch Musique affiche les prochains événements des calendriers configurés sur ce Mac. Aucun événement n’est modifié.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Notch Musique affiche les prochains événements des calendriers configurés sur ce Mac. Aucun événement n’est modifié.</string>
 </dict></plist>

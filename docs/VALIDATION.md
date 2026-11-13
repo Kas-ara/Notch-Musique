@@ -1,5 +1,44 @@
 # Validation
 
+## Local release package 0.4.0 — November 13, 2026
+
+The user requested local tagging and packaging, with a local commit if needed. `bash package-release.sh` completed successfully: it ran `bash build.sh`, then the correctly quoted executable with `--self-test` (31 assertions passed), verified the ad hoc signature, created the ZIP, extracted it, verified the extracted signature, reran all 31 assertions successfully, and generated and verified the SHA-256 checksum. Shell syntax, Info.plist lint and `git diff --check` also passed. See [release files and notes](RELEASE.md).
+
+This packages the implemented features and application icon. It adds no new manual calendar, Spotify or display validation beyond the observations below. The application remains ad hoc signed and not notarized; downloaded-app Gatekeeper approval is unvalidated. The requested release commit and annotated `v0.4.0` tag are local; the ZIP and checksum remain under ignored `build/release/`.
+
+## Application icon — November 13, 2026
+
+The user requested an application icon. The existing [project logo](../assets/logo.png) was packaged into [AppIcon.icns](../Resources/AppIcon.icns), with standard and Retina representations from 16 to 1024 pixels. The converted PNG preview was visually inspected. Icon conversion failed inside the restricted environment despite valid PNG sizes, then succeeded using macOS `iconutil` outside it with approval.
+
+`bash build.sh` completed successfully, then `'build/Notch Musique.app/Contents/MacOS/NotchMusique' --self-test` passed all 31 assertions. The built plist references `AppIcon.icns`; the bundled file matches the source byte for byte. Ad hoc signature verification, plist lint, icon script shell syntax and `git diff --check` passed. This checks bundle packaging, not Finder/Launch Services cache refresh. The running app was not restarted for this icon-only change. Spotify integration and screen geometry were unchanged; no new manual media or display validation was performed.
+
+## Compact utilities — November 13, 2026 (0.4.0)
+
+Confirmed implementation request: Media, Calendar and Focus, with artwork at rest, a smaller expanded panel, automatic 25/5 focus/break cycles, skip and alternative durations. The user clarified that BOnotch's closed size was satisfactory; its expanded interface was the issue. See [development decisions](DEVELOPPEMENT.md).
+
+`bash build.sh` and the correctly quoted executable with `--self-test` passed. The suite now has **31 assertions**: the original ten Spotify/image checks, three simulated seek/bounds checks, and eighteen focus/geometry checks. Focus checks cover exact phase boundaries, late callbacks, pause/resume, skip while running and paused, return from a long hidden interval, preset changes and duration bounds. Geometry checks cover camera clearance and panel bounds. Tests do not request calendar access or contact Spotify. Shell syntax, Info.plist lint, ad hoc signature verification and `git diff --check` also passed.
+
+Actual display query: Built-in Retina Display, 1470 × 956 points, safe top inset 32 points, camera x=645.5…824.5 (179 points). Native render review used this geometry. Media/Focus measure 360 × approximately 201 points; Calendar 360 × approximately 233 points, with the current 1.6-point stroke preference. Activity wings remain outside the measured camera interval. Screens without a notch remain unsupported for the overlay. Alternate screen bounds are covered by assertions, not by external-display hardware tests.
+
+Native Computer Use checks on the built app:
+
+- Real Spotify artwork, track metadata and playback position appeared both closed and expanded.
+- Pause changed the control to Play, and resuming restored Pause. A real seek through the slider's accessibility value moved paused playback to the middle of the track; the original position was restored, then playback resumed. Real previous/next and pointer-drag seeking remain to be manually validated; simulated seek and clamping pass.
+- Direct panel opening pins it. Tabs switch between Media, Calendar and Focus and resize the panel.
+- Focus Start, running Skip to a 5-minute break, Pause, paused Skip back to a 25-minute focus, Resume and Reset all produced the expected visible states. The 50/10 preset showed 50:00; 25/5 was restored and the timer was left idle. Duration choices were inspected. Automatic transitions and long-sleep catch-up were validated with injected dates, not by waiting through full live cycles or sleeping the hardware.
+- Calendar initially showed its explicit connect button. No calendar access was granted during validation. Real authorized fetching, denied/restricted states, account changes, all-day/time-zone behavior and background EventKit updates still require manual validation. The seven-day list was visually inspected using a clearly fictional demo event; it does not validate a user's calendar accounts.
+- Native screenshot export refreshed the real Spotify and appearance screenshots without capturing other windows and restored the selected Calendar tab. Focus and Calendar documentation screenshots come from demo renders. Full redraw was added before bitmap capture to avoid incomplete cached SwiftUI content.
+
+No new CPU/RAM or battery measurements were taken. The historical music-only measurements below do not establish the cost of focus or calendar. Hover, display sleep/wake, fullscreen and external displays still need broader manual checks. Calendar reading uses public EventKit; media remains Spotify desktop only. No license, login-item setting or calendar permission was accepted on the user's behalf.
+
+For repeatable native demo rendering, quit the running app and run the following from a graphical session (the command exits after writing six PNGs; it does not contact Spotify or read real calendars):
+
+```sh
+'build/Notch Musique.app/Contents/MacOS/NotchMusique' --demo --preview-output /tmp/notch-musique-previews
+```
+
+`--screen-info` prints actual NSScreen geometry without starting playback or calendar integration. GUI/display access is required for both diagnostic commands. The self-test remains headless.
+
 ## Release archive — November 13, 2026
 
 `bash package-release.sh` completed successfully for version 0.3.0. It ran `bash build.sh`, then the correctly quoted executable with `--self-test`: all ten assertions passed. Ad hoc signature verification passed for both the build and the extracted ZIP. The extracted app also passed all ten assertions, and the generated SHA-256 checksum verified successfully. Artifacts are described in [release packaging](RELEASE.md).

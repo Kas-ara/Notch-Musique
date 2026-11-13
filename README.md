@@ -16,8 +16,8 @@
 
 *Easy, developers: we love you. My wallet is just a little sensitive.*
 
-A discreet contour around your notch shows your Spotify track's progress.
-Hover over it and the player unfolds. Your camera now has a music-loving neighbor.
+A compact glance around your notch shows Spotify artwork, an upcoming meeting, or your focus timer.
+Hover to open a small panel with **Media · Calendar · Focus**. Your camera now has three useful neighbors.
 
 **Free · Open source · No subscription · No Spotify developer account**
 
@@ -31,19 +31,27 @@ Hover over it and the player unfolds. Your camera now has a music-loving neighbo
 
 ## 👀 Take a look
 
-**At rest: just a line. We did say discreet.**
+**At rest: artwork and playback status. Focus takes priority when a session is active.**
 
-<img src="assets/screenshots/contour.png" alt="Compact progress contour around the notch" width="374">
+<img src="assets/screenshots/contour.png" alt="Compact Spotify artwork and playback glance around the physical notch" width="300">
 
 **On hover: the same contour stretches out.**
 
-<img src="assets/screenshots/lecteur.png" alt="Expanded player with artwork, track title and Spotify controls" width="540">
+<img src="assets/screenshots/lecteur.png" alt="Compact expanded Spotify player with tabs, artwork and controls" width="360">
+
+**Focus: 25 minutes of work, 5 minutes to breathe. Repeat.**
+
+<img src="assets/screenshots/focus.png" alt="Compact focus timer with phase, countdown, skip and duration choices" width="360">
+
+**Calendar: the next events, without a giant empty column.**
+
+<img src="assets/screenshots/calendrier.png" alt="Compact demo agenda in a single column" width="360">
 
 **In settings: your color, your thickness, your business.**
 
 <img src="assets/screenshots/apparence.png" alt="Native contour color and thickness settings" width="440">
 
-*Screenshots exported from the native application. Artwork and title depend on the current track. The current application interface is in French.*
+*Screenshots are native application renders. Music views show real Spotify playback; the focus and calendar examples use demo mode and the calendar event is fictional. The application interface is in French.*
 
 </div>
 
@@ -54,6 +62,9 @@ Hover over it and the player unfolds. Your camera now has a music-loving neighbo
 | 🎵 | Track progress around the notch. |
 | 🖱️ | Hover to expand the contour and reveal playback information. |
 | ⏯️ | Artwork, title, artist, time and Spotify controls. |
+| 🎚️ | Seek through a track with the position slider. |
+| 📅 | Upcoming events from calendars configured in macOS, with opt-in access. |
+| ⏱️ | Automatic focus/break cycles, pause/resume, skip and saved duration choices. |
 | 🎨 | Any color, with stroke thickness from 1 to 4 points. |
 | 📐 | Dimensions follow your actual notch and stroke thickness. |
 | 💾 | Settings survive a restart. |
@@ -73,7 +84,8 @@ bash build.sh
 open 'build/Notch Musique.app'
 ```
 
-Play a track in Spotify, then hover over the line just below the notch. 🎶
+Play a track in Spotify, then hover over the notch or its activity wings. 🎶
+Use **Waveform icon → Ouvrir le panneau…** (Open panel) to open and pin it directly. The pin button restores hover behavior when unselected.
 
 macOS may ask for permission to control Spotify, used to read track information and send playback commands. If denied, open **System Settings → Privacy & Security → Automation**, then choose **Réessayer la connexion Spotify** (retry Spotify connection) from the waveform menu.
 
@@ -83,7 +95,7 @@ The build is locally signed without Apple notarization. Run `bash package-releas
 
 **Waveform icon → Apparence…** (Appearance)
 
-Choose a color and thickness. Compact dimensions automatically follow **stroke thickness + 1 point of padding**. A thin line won't charge extra rent for screen space.
+Choose a color and thickness. The contour follows **stroke thickness + 1 point of padding**, with small wings beside the measured camera area for artwork and activity status. The open panel is normally 360 points wide, bounded by the actual screen edges.
 
 Changes apply immediately. Color and thickness are saved locally. The menu also lets you hide the contour or quit.
 
@@ -91,13 +103,21 @@ Enable **Waveform icon → Démarrer avec le système** (Launch at login) to sta
 
 To share the result, **Notch Musique menu → Exporter des captures…** (Export screenshots) saves three PNG views in your chosen folder without capturing other desktop windows.
 
+## ⏱️ Focus and calendar
+
+Open **Focus → Démarrer** (Start) for the default **25-minute focus / 5-minute break** cycle. Phases advance automatically. Pause/resume, skip to the next phase, or reset the session. Choose **15/5**, **25/5**, **50/10**, or separate durations under **Durées…** while idle; reset an active session before changing them. Durations are saved. Quitting ends the session, while hiding the panel or sleeping the display lets time continue and catches up on return. A system beep announces a phase change while the app is visible. This timer does not enable macOS's system Focus mode or block other apps.
+
+The closed notch shows the active focus's icon and remaining time, including when paused. Otherwise, an ongoing meeting or one starting within 15 minutes takes priority over music; without one, Spotify artwork and playback status remain visible.
+
+Open **Calendrier → Connecter le calendrier** (Connect calendar) to request access. Notch Musique displays the next seven days of events from accounts configured in macOS Calendar, such as iCloud or Google. The app only reads events; macOS calls the required permission full calendar access on macOS 14+. It does not modify events, read reminders or store event titles on disk. Denying access leaves the music player and timer usable. Enable the Calendar account in macOS first; a Google or Outlook website alone is insufficient.
+
 ## 🪶 What about resource use?
 
 The first prototype was enthusiastic: mouse checks every 80 ms and ten progress redraws per second. Enthusiasm is nice. Battery life is nice too.
 
-The release build uses hover events with a fallback check at most four times per second, compact progress drawing at most twice per second, and no periodic progress drawing while paused. Spotify notifications are backed by synchronization every 10 seconds during playback and 30 seconds while paused. Artwork is downsampled to **128 pixels maximum**. Periodic tasks stop when the contour is hidden or the display sleeps.
+The release build uses hover events with a fallback check at most four times per second and compact music progress drawing at most twice per second. An active focus updates once per second; calendar changes have a one-minute fallback. Spotify notifications are backed by synchronization every 10 seconds during playback and 30 seconds while paused. Artwork is downsampled to **128 pixels maximum**. Display timers stop when the contour is hidden or the display sleeps; focus deadlines continue logically.
 
-Local CPU observations dropped from roughly **3–4% to 0.4%** after settling. No RAM reduction has been demonstrated: around 33 MB before opening settings, with higher readings after exports. See [validation](docs/VALIDATION.md). These are observations on one machine, not a promise for every setup.
+Earlier music-only CPU observations dropped from roughly **3–4% to 0.4%** after settling. The new calendar and focus features have not been benchmarked. No RAM reduction has been demonstrated. See [validation](docs/VALIDATION.md).
 
 ## 🔒 Permissions, without the spy novel
 
