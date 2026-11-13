@@ -1,0 +1,4 @@
+# Generated app, compiler cache, release ZIPs and checksums (GitHub assets only).
+/build/
+.DS_Store
+docs/HISTORIQUE.md
