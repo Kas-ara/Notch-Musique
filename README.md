@@ -111,6 +111,14 @@ The closed notch shows the active focus's icon and remaining time, including whe
 
 Open **Calendrier → Connecter le calendrier** (Connect calendar) to request access. Notch Musique displays the next seven days of events from accounts configured in macOS Calendar, such as iCloud or Google. The app only reads events; macOS calls the required permission full calendar access on macOS 14+. It does not modify events, read reminders or store event titles on disk. Denying access leaves the music player and timer usable. Enable the Calendar account in macOS first; a Google or Outlook website alone is insufficient.
 
+## ♥ Countdown to someone or something
+
+When Spotify is paused or closed, the notch can show a personal countdown. Open the panel and select the **hourglass tab**. Enter a short label (up to 40 characters), such as “Summer holiday”, choose a future date and time, and select **Enregistrer** (Save). The editor stays pinned while you type; unpin it afterward to restore hover behavior.
+
+The closed notch shows weeks/days and hours/minutes in its activity wings. Open Media while music is idle to see the label, full remaining time and target date. Active Focus and imminent meetings retain priority; Spotify playback brings back the music view. The label and deadline survive restarting the app. Use **Modifier…** (Edit) or the hourglass tab to change them, or **Supprimer** (Delete) to remove the countdown. At the deadline it shows “C’est le moment !” until edited or removed. There is no notification or alarm.
+
+The target uses the local date and time selected when saving, then follows that absolute instant across sleep, restart and time-zone changes. Weeks and days mean elapsed durations of seven days and 24 hours; daylight-saving changes can therefore differ from calendar-day counts. Remaining minutes round up.
+
 ## 🪶 What about resource use?
 
 The first prototype was enthusiastic: mouse checks every 80 ms and ten progress redraws per second. Enthusiasm is nice. Battery life is nice too.

@@ -4,7 +4,7 @@ import ImageIO
 import ServiceManagement
 
 final class NotchPanel: NSPanel {
-    override var canBecomeKey: Bool { false }
+    override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
 
@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     private var model: SpotifyModel!
     private var calendar: CalendarModel!
     private let focus = FocusModel()
+    private let countdown = CountdownModel(defaults: CommandLine.arguments.contains("--demo") ? nil : .standard)
     private let layout = NotchLayout()
     private let appearance = Appearance()
     private var settingsWindow: NSWindow?
@@ -48,7 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Évite deux overlays superposés lors d’un second lancement.
         let peers = NSRunningApplication.runningApplications(withBundleIdentifier: "local.notchmusique.app")
-        if peers.contains(where: { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }) {
+        if !(demo && CommandLine.arguments.contains("--preview-output")), peers.contains(where: { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }) {
             NSApp.terminate(nil)
             return
         }
@@ -72,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             guard self?.layout.renderActive == true else { return }
             NSSound.beep()
         }
-        let hostingView = HoverHostingView(rootView: NotchView(model: model, focus: focus, calendar: calendar, layout: layout, appearance: appearance))
+        let hostingView = HoverHostingView(rootView: NotchView(model: model, focus: focus, calendar: calendar, countdown: countdown, layout: layout, appearance: appearance))
         hostingView.hoverChanged = { [weak self] inside in
             guard let self else { return }
             self.collapseTask?.cancel()
@@ -311,7 +312,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             ("calendar", { self.layout.tab = .calendar }),
             ("focus", { self.layout.tab = .focus }),
             ("focus-running", { self.focus.toggle() }),
-            ("compact-focus", { self.layout.expanded = false; self.resize() })
+            ("compact-focus", { self.layout.expanded = false; self.resize() }),
+            ("countdown-editor", {
+                self.focus.reset(); self.model.playing = false
+                self.countdown.save(label: "Vacances", date: Date().addingTimeInterval(9 * 86400 + 3 * 3600))
+                self.layout.tab = .countdown; self.setExpanded(true)
+            }),
+            ("countdown", { self.layout.tab = .media }),
+            ("compact-countdown", { self.layout.expanded = false; self.resize() })
         ]
         func render(_ index: Int) {
             guard index < steps.count else { self.focus.reset(); NSApp.terminate(nil); return }
@@ -456,7 +464,7 @@ if CommandLine.arguments.contains("--self-test") {
     model.seek(to: -1)
     precondition(model.progress(at: now) == 0, "Seek inférieur non borné")
     let utilities = runUtilitySelfTests()
-    print("\(13 + utilities) vérifications réussies : Spotify simulé, images, seek, transitions du focus et géométrie bornée.")
+    print("\(13 + utilities) vérifications réussies : Spotify simulé, images, seek, transitions du focus, compte à rebours et géométrie bornée.")
     exit(0)
 }
 

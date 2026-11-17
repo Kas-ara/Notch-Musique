@@ -6,9 +6,9 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
 
 final class NotchLayout: ObservableObject {
     enum Tab: String, CaseIterable {
-        case media = "Média", calendar = "Calendrier", focus = "Focus"
+        case media = "Média", calendar = "Calendrier", focus = "Focus", countdown = "Compte à rebours"
         var symbol: String {
-            switch self { case .media: return "music.note"; case .calendar: return "calendar"; case .focus: return "timer" }
+            switch self { case .media: return "music.note"; case .calendar: return "calendar"; case .focus: return "timer"; case .countdown: return "hourglass" }
         }
     }
     @Published var expanded = false
@@ -23,7 +23,7 @@ final class NotchLayout: ObservableObject {
     @Published var renderActive = true
     let wingWidth: CGFloat = 54
     var expandedWidth: CGFloat { min(availableWidth, max(360, width)) }
-    var contentHeight: CGFloat { tab == .calendar ? 198 : 166 }
+    var contentHeight: CGFloat { tab == .countdown ? 218 : (tab == .calendar ? 198 : 166) }
     var expandedHeight: CGFloat { min(availableHeight, height + contentHeight) }
     var hoverChanged: ((Bool) -> Void)?
     var geometryChanged: (() -> Void)?
@@ -57,14 +57,26 @@ struct NotchView: View {
     @ObservedObject var model: SpotifyModel
     @ObservedObject var focus: FocusModel
     @ObservedObject var calendar: CalendarModel
+    @ObservedObject var countdown: CountdownModel
     @ObservedObject var layout: NotchLayout
     @ObservedObject var appearance: Appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ViewState private var countdownLabel = ""
+    @ViewState private var countdownDate = Date().addingTimeInterval(86400)
     @ViewState private var seeking = false
     @ViewState private var seekPosition = 0.0
     private var accent: Color { focus.started ? .purple : appearance.color }
     private var visualWidth: CGFloat { layout.expanded ? layout.expandedWidth : layout.width }
     private var visualHeight: CGFloat { layout.expanded ? layout.expandedHeight : layout.height }
+
+    private var showCountdown: Bool {
+        countdown.showsWhenIdle(playing: model.playing, focusStarted: focus.started, meeting: calendar.nextMeeting != nil)
+    }
+    @ViewBuilder private func countdownClock<Content: View>(@ViewBuilder content: @escaping (Date) -> Content) -> some View {
+        if layout.renderActive {
+            TimelineView(.periodic(from: .now, by: 1)) { context in content(context.date) }
+        } else { content(.now) }
+    }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -82,9 +94,11 @@ struct NotchView: View {
                     tabs
                     Group {
                         switch layout.tab {
-                        case .media: media
+                        case .media:
+                            if showCountdown { countdownSummary } else { media }
                         case .calendar: agenda
                         case .focus: focusPanel
+                        case .countdown: countdownPanel
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -111,6 +125,8 @@ struct NotchView: View {
                     Image(systemName: focus.phase.symbol).foregroundStyle(.purple)
                 } else if calendar.nextMeeting != nil {
                     Image(systemName: "calendar").foregroundStyle(.blue)
+                } else if showCountdown {
+                    Image(systemName: "heart.fill").foregroundStyle(appearance.color)
                 } else { artwork(size: min(26, layout.notchHeight - 4)) }
             }
             .frame(width: layout.wingWidth)
@@ -123,6 +139,12 @@ struct NotchView: View {
                 } else if let event = calendar.nextMeeting {
                     Text(event.start, style: .time).font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.blue).lineLimit(1)
+                } else if showCountdown {
+                    countdownClock { date in
+                        Text(countdown.remaining(at: date).compact)
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .multilineTextAlignment(.center).foregroundStyle(appearance.color)
+                    }
                 } else {
                     Image(systemName: model.playing ? "waveform" : "pause.fill")
                         .font(.system(size: 14)).foregroundStyle(appearance.color.opacity(model.available ? 1 : 0.4))
@@ -132,7 +154,7 @@ struct NotchView: View {
         }
         .padding(.horizontal, appearance.margin)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(focus.started ? "\(focus.phase.title), \(focus.time)\(focus.running ? "" : ", en pause")" : (calendar.nextMeeting.map { "Prochain événement : \($0.title)" } ?? "\(model.title), \(model.artist)"))
+        .accessibilityLabel(focus.started ? "\(focus.phase.title), \(focus.time)\(focus.running ? "" : ", en pause")" : (calendar.nextMeeting.map { "Prochain événement : \($0.title)" } ?? (showCountdown ? "\(countdown.target?.label ?? ""), \(countdown.remaining(at: .now).full)" : "\(model.title), \(model.artist)" )))
     }
 
     private var tabs: some View {
@@ -142,11 +164,16 @@ struct NotchView: View {
                     layout.tab = tab
                     if tab == .calendar { calendar.refresh() }
                 } label: {
-                    Label(tab.rawValue, systemImage: tab.symbol)
+                    Group {
+                        if tab == .countdown { Image(systemName: tab.symbol) }
+                        else { Label(tab.rawValue, systemImage: tab.symbol) }
+                    }
                         .font(.system(size: 11, weight: .medium))
-                        .padding(.horizontal, 8).frame(height: 26)
+                        .padding(.horizontal, 6).frame(height: 26)
                         .background(layout.tab == tab ? Color.white.opacity(0.14) : .clear, in: Capsule())
                 }.buttonStyle(.plain)
+                .accessibilityLabel(tab.rawValue)
+                .help(tab.rawValue)
                 .accessibilityAddTraits(layout.tab == tab ? .isSelected : [])
             }
             Spacer(minLength: 0)
@@ -215,6 +242,62 @@ struct NotchView: View {
         })
         .controlSize(.mini).disabled(!model.available)
         .accessibilityLabel("Position de lecture")
+    }
+
+    private var countdownSummary: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(countdown.target?.label ?? "Compte à rebours", systemImage: "heart.fill")
+                .font(.system(size: 14, weight: .medium)).lineLimit(1)
+            countdownClock { date in
+                Text(countdown.remaining(at: date).full)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded)).monospacedDigit()
+                    .lineLimit(1).minimumScaleFactor(0.75)
+            }
+            if let target = countdown.target {
+                Text(target.date.formatted(date: .abbreviated, time: .shortened))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+            Button("Modifier…") { layout.tab = .countdown; layout.pinned = true }
+                .font(.system(size: 11))
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var countdownPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField("Ex. Vacances", text: $countdownLabel)
+                .textFieldStyle(.roundedBorder).font(.system(size: 12))
+                .accessibilityLabel("Nom du compte à rebours")
+                .onChange(of: countdownLabel) { value in
+                    if value.count > 40 { countdownLabel = String(value.prefix(40)) }
+                }
+                .onTapGesture { layout.pinned = true }
+            DatePicker("Objectif", selection: $countdownDate, displayedComponents: [.date, .hourAndMinute])
+                .datePickerStyle(.field).font(.system(size: 11))
+                .environment(\.locale, Locale(identifier: "fr_FR"))
+                .onTapGesture { layout.pinned = true }
+            if countdown.target != nil {
+                countdownClock { date in
+                    Text(countdown.remaining(at: date).full)
+                        .font(.system(size: 12, weight: .medium)).monospacedDigit()
+                }
+            } else {
+                Text("Affiché lorsque Spotify ne joue pas.")
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+            HStack {
+                Button("Enregistrer") {
+                    if countdown.save(label: countdownLabel, date: countdownDate) { layout.tab = .media }
+                }.disabled(countdownLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || countdownDate <= Date())
+                if countdown.target != nil {
+                    Button("Supprimer") { countdown.clear() }
+                }
+            }.font(.system(size: 11))
+        }
+        .onAppear {
+            countdownLabel = countdown.target?.label ?? ""
+            countdownDate = countdown.target?.date ?? Date().addingTimeInterval(86400)
+            layout.pinned = true
+        }
     }
 
     private var focusPanel: some View {
@@ -326,7 +409,7 @@ struct NotchView: View {
         ZStack {
             NotchBackground().fill(.black)
             NotchContour().stroke(.white.opacity(0.12), lineWidth: 1)
-            NotchContour().trim(from: 0, to: focus.started ? focus.progress : model.progress(at: date))
+            NotchContour().trim(from: 0, to: focus.started ? focus.progress : (showCountdown ? 0 : model.progress(at: date)))
                 .stroke(accent.opacity(focus.started || model.playing ? 0.85 : 0.32), style: StrokeStyle(lineWidth: appearance.thickness, lineCap: .round))
         }
         .padding(.horizontal, appearance.thickness / 2 + 0.5)
