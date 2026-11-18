@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-    <key>CFBundleExecutable</key><string>NotchMusique</string>
+    <key>CFBundleExecutable</key><string>NotchMultitools</string>
     <key>CFBundleIdentifier</key><string>local.notchmusique.app</string>
-    <key>CFBundleName</key><string>Notch Musique</string>
-    <key>CFBundleDisplayName</key><string>Notch Musique</string>
+    <key>CFBundleName</key><string>Notch multitools</string>
+    <key>CFBundleDisplayName</key><string>Notch multitools</string>
     <key>CFBundleIconFile</key><string>AppIcon.icns</string>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.4.0</string>
-    <key>CFBundleVersion</key><string>4</string>
+    <key>CFBundleShortVersionString</key><string>0.5.0</string>
+    <key>CFBundleVersion</key><string>5</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Notch Musique lit le morceau Spotify en cours et permet de contrôler sa lecture au survol de l’encoche.</string>
+    <string>Notch multitools reads the current Spotify track and lets you control playback from the notch.</string>
     <key>NSCalendarsUsageDescription</key>
-    <string>Notch Musique affiche les prochains événements des calendriers configurés sur ce Mac. Aucun événement n’est modifié.</string>
+    <string>Notch multitools shows upcoming events from the calendars set up on this Mac. It does not modify events.</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
-    <string>Notch Musique affiche les prochains événements des calendriers configurés sur ce Mac. Aucun événement n’est modifié.</string>
+    <string>Notch multitools shows upcoming events from the calendars set up on this Mac. It does not modify events.</string>
 </dict></plist>

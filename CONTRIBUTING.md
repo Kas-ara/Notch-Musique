@@ -8,8 +8,8 @@ You need an Apple Silicon Mac, macOS 13 or later, and Apple's Command Line Tools
 
 ```sh
 bash build.sh
-'build/Notch Musique.app/Contents/MacOS/NotchMusique' --self-test
-open 'build/Notch Musique.app' --args --demo
+'build/Notch multitools.app/Contents/MacOS/NotchMultitools' --self-test
+open 'build/Notch multitools.app' --args --demo
 ```
 
 Quit any existing instance before relaunching. To test real Spotify playback, quit demo mode and launch normally.
@@ -22,6 +22,8 @@ Quit any existing instance before relaunching. To test real Spotify playback, qu
 - Prefer hover events, retain a slow fallback when necessary, and avoid unnecessary redraws while paused.
 - Report checks actually performed and remaining limitations.
 - Include a screenshot when changing the appearance.
+
+User-facing strings live in the matching French and English tables under Resources. Update both Localizable.strings files when adding an interface label and both InfoPlist.strings files when changing permission descriptions.
 
 Code lives in `Sources/`, the build script in `build.sh`, resources in `Resources/`, and visuals in `assets/`. See [validation results](docs/VALIDATION.md).
 

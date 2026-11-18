@@ -67,6 +67,21 @@ func runUtilitySelfTests() -> Int {
     savedCountdown.clear()
     check(CountdownModel(defaults: isolated).target == nil, "Deleting a countdown must also remove its stored target")
 
+    let french = L10n.language == "fr"
+    check(NotchLayout.Tab.calendar.title == (french ? "Calendrier" : "Calendar")
+          && NotchLayout.Tab.countdown.title == (french ? "Compte à rebours" : "Countdown"),
+          "Tab labels must use the preferred app language")
+    check(remaining.full == (french ? "1 sem · 2 j · 3 h · 2 min" : "1 wk · 2 d · 3 h · 2 min")
+          && remaining.compact == (french ? "1s 2j\n3h 2m" : "1w 2d\n3h 2m"),
+          "Both countdown formats must preserve their values and localize their units")
+    check(L10n.format("calendar.glance", "Test") == (french ? "Prochain événement : Test" : "Next event: Test"),
+          "Calendar accessibility labels must interpolate the event title")
+    let permission = Bundle.main.object(forInfoDictionaryKey: "NSCalendarsFullAccessUsageDescription") as? String
+    let spotifyPermission = Bundle.main.object(forInfoDictionaryKey: "NSAppleEventsUsageDescription") as? String
+    check(permission?.hasPrefix(french ? "Notch multitools affiche" : "Notch multitools shows") == true
+          && spotifyPermission?.hasPrefix(french ? "Notch multitools lit" : "Notch multitools reads") == true,
+          "Permission descriptions must use the preferred app language")
+
     let layout = NotchLayout()
     layout.configure(notchWidth: 190, notchHeight: 32, margin: 3,
                      availableWidth: 1424, availableHeight: 876)

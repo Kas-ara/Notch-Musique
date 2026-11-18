@@ -1,5 +1,13 @@
 # Validation
 
+## Notch multitools and localization — November 18, 2026
+
+The renamed arm64 application built successfully and passed 47 headless assertions in French, English, with French as the second macOS language preference, and with English as the fallback for German. The checks cover the translated tab names, countdown units in both display sizes, calendar accessibility text and localized permission descriptions read by the app. Both language tables contain the same 92 interface keys and three permission descriptions.
+
+The bundle identifier matches the previous build. Packaging the 0.5.0 arm64 bundle verified the signatures of the built and extracted app, reran the self-tests and verified the ZIP's SHA-256 checksum.
+
+Visual inspection in both languages, switching the language through System Settings, and the actual macOS permission dialogs and login item migration remain to be checked.
+
 ## Idle countdown — November 18, 2026
 
 `bash build.sh` completed, then `'build/Notch Musique.app/Contents/MacOS/NotchMusique' --self-test` passed **43 assertions**. Twelve new checks cover initial absence, blank and bounded labels, weeks/days/hours/minutes decomposition, Spotify/focus/meeting priority, subminute rounding, exact and overdue deadlines, persisted restart/deletion behavior, and editor geometry. Tests use injected dates and an isolated temporary UserDefaults suite, without modifying the user's countdown. The existing simulated Spotify, image, seek, focus and geometry checks still pass.

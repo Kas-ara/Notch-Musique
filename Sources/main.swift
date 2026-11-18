@@ -128,31 +128,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
 
     private func configureMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Notch Musique")
+        statusItem.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: L10n.appName)
         let menu = NSMenu()
         menu.delegate = self
-        let title = NSMenuItem(title: demo ? "Notch Musique · Simulation" : "Notch Musique · Spotify", action: nil, keyEquivalent: "")
+        let title = NSMenuItem(title: demo ? "\(L10n.appName) · \(L10n.text("demo.badge"))" : L10n.appName, action: nil, keyEquivalent: "")
         menu.addItem(title)
         menu.addItem(.separator())
-        add(menu, "Ouvrir le panneau…", action: #selector(openPanel))
-        add(menu, "Ouvrir Spotify", action: #selector(openSpotify))
-        add(menu, "Réessayer la connexion Spotify", action: #selector(retry))
-        add(menu, "Apparence…", action: #selector(showAppearance), key: ",")
-        add(menu, "Démarrer avec le système", action: #selector(toggleLaunchAtLogin))
-        add(menu, "Masquer le contour", action: #selector(toggleVisible))
+        add(menu, L10n.text("menu.openPanel"), action: #selector(openPanel))
+        add(menu, L10n.text("menu.openSpotify"), action: #selector(openSpotify))
+        add(menu, L10n.text("menu.retrySpotify"), action: #selector(retry))
+        add(menu, L10n.text("menu.appearance"), action: #selector(showAppearance), key: ",")
+        add(menu, L10n.text("menu.launchAtLogin"), action: #selector(toggleLaunchAtLogin))
+        add(menu, L10n.text("menu.hideContour"), action: #selector(toggleVisible))
         menu.addItem(.separator())
-        add(menu, "Quitter Notch Musique", action: #selector(quit), key: "q")
+        add(menu, L10n.text("menu.quit"), action: #selector(quit), key: "q")
         statusItem.menu = menu
         // Un menu d’application natif rend les raccourcis et l’accès clavier
         // aux réglages disponibles, même pour une application sans Dock.
         let mainMenu = NSMenu()
-        let appItem = NSMenuItem(title: "Notch Musique", action: nil, keyEquivalent: "")
-        let appMenu = NSMenu(title: "Notch Musique")
-        add(appMenu, "Ouvrir le panneau…", action: #selector(openPanel), key: "o")
-        add(appMenu, "Apparence…", action: #selector(showAppearance), key: ",")
-        add(appMenu, "Exporter des captures…", action: #selector(exportScreenshots))
+        let appItem = NSMenuItem(title: L10n.appName, action: nil, keyEquivalent: "")
+        let appMenu = NSMenu(title: L10n.appName)
+        add(appMenu, L10n.text("menu.openPanel"), action: #selector(openPanel), key: "o")
+        add(appMenu, L10n.text("menu.appearance"), action: #selector(showAppearance), key: ",")
+        add(appMenu, L10n.text("menu.export"), action: #selector(exportScreenshots))
         appMenu.addItem(.separator())
-        add(appMenu, "Quitter Notch Musique", action: #selector(quit), key: "q")
+        add(appMenu, L10n.text("menu.quit"), action: #selector(quit), key: "q")
         appItem.submenu = appMenu
         mainMenu.addItem(appItem)
         NSApp.mainMenu = mainMenu
@@ -169,8 +169,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         for item in menu.items where item.action == #selector(toggleLaunchAtLogin) {
             item.state = status == .enabled ? .on : (status == .requiresApproval ? .mixed : .off)
             item.title = status == .requiresApproval
-                ? "Démarrer avec le système (autorisation requise…)"
-                : "Démarrer avec le système"
+                ? L10n.text("menu.launchAtLoginPending")
+                : L10n.text("menu.launchAtLogin")
         }
     }
 
@@ -189,7 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             if service.status == .requiresApproval { showLoginApproval() }
         } catch {
             let alert = NSAlert()
-            alert.messageText = "Impossible de modifier le démarrage automatique"
+            alert.messageText = L10n.text("login.error")
             alert.informativeText = error.localizedDescription
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
@@ -198,10 +198,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
 
     private func showLoginApproval() {
         let alert = NSAlert()
-        alert.messageText = "Autoriser le démarrage automatique"
-        alert.informativeText = "Activez Notch Musique dans Réglages Système → Général → Ouverture. Vous pouvez aussi y désactiver le démarrage automatique."
-        alert.addButton(withTitle: "Ouvrir les réglages")
-        alert.addButton(withTitle: "Plus tard")
+        alert.messageText = L10n.text("login.approval")
+        alert.informativeText = L10n.text("login.instructions")
+        alert.addButton(withTitle: L10n.text("login.openSettings"))
+        alert.addButton(withTitle: L10n.text("login.later"))
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
             SMAppService.openSystemSettingsLoginItems()
@@ -216,7 +216,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
               let right = screen.auxiliaryTopRightArea else {
             panel.orderOut(nil)
             setActivity(false)
-            statusItem.button?.toolTip = "Aucun écran avec encoche détecté"
+            statusItem.button?.toolTip = L10n.text("menu.noNotch")
             return
         }
         let notchWidth = right.minX - left.maxX
@@ -315,7 +315,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             ("compact-focus", { self.layout.expanded = false; self.resize() }),
             ("countdown-editor", {
                 self.focus.reset(); self.model.playing = false
-                self.countdown.save(label: "Vacances", date: Date().addingTimeInterval(9 * 86400 + 3 * 3600))
+                self.countdown.save(label: L10n.text("demo.countdown"), date: Date().addingTimeInterval(9 * 86400 + 3 * 3600))
                 self.layout.tab = .countdown; self.setExpanded(true)
             }),
             ("countdown", { self.layout.tab = .media }),
@@ -341,8 +341,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     }
     @objc private func exportScreenshots() {
         let picker = NSOpenPanel()
-        picker.title = "Exporter les captures de Notch Musique"
-        picker.prompt = "Exporter ici"
+        picker.title = L10n.text("export.title")
+        picker.prompt = L10n.text("export.confirm")
         picker.canChooseFiles = false
         picker.canChooseDirectories = true
         picker.canCreateDirectories = true
@@ -391,11 +391,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
                     setExpanded(wasExpanded)
                     exportingScreenshots = false
                     if failures.isEmpty {
-                        statusItem.button?.toolTip = "Captures exportées dans \(folder.lastPathComponent)"
+                        statusItem.button?.toolTip = L10n.format("export.saved", folder.lastPathComponent)
                     } else {
                         let alert = NSAlert()
-                        alert.messageText = "Export incomplet"
-                        alert.informativeText = "Impossible d’enregistrer : " + failures.joined(separator: ", ")
+                        alert.messageText = L10n.text("export.incomplete")
+                        alert.informativeText = L10n.format("export.failedFiles", failures.joined(separator: ", "))
                         alert.runModal()
                     }
                 }
@@ -405,7 +405,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     @objc private func showAppearance() {
         if settingsWindow == nil {
             let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
-            window.title = "Notch Musique — Apparence"
+            window.title = L10n.text("appearance.window")
             window.isReleasedWhenClosed = false
             window.delegate = self
             let host = NSHostingView(rootView: AppearanceView(appearance: appearance))
@@ -425,7 +425,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     }
     @objc private func toggleVisible(_ sender: NSMenuItem) {
         suspended.toggle()
-        sender.title = suspended ? "Afficher le contour" : "Masquer le contour"
+        sender.title = suspended ? L10n.text("menu.showContour") : L10n.text("menu.hideContour")
         layout.expanded = false
         collapseTask?.cancel()
         if suspended { panel.orderOut(nil); setActivity(false) } else { positionOnScreen() }
@@ -464,7 +464,7 @@ if CommandLine.arguments.contains("--self-test") {
     model.seek(to: -1)
     precondition(model.progress(at: now) == 0, "Seek inférieur non borné")
     let utilities = runUtilitySelfTests()
-    print("\(13 + utilities) vérifications réussies : Spotify simulé, images, seek, transitions du focus, compte à rebours et géométrie bornée.")
+    print("\(13 + utilities) checks passed (app language: \(L10n.language)).")
     exit(0)
 }
 

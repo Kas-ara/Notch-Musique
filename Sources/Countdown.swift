@@ -13,8 +13,8 @@ final class CountdownModel: ObservableObject {
         let hours: Int
         let minutes: Int
         let arrived: Bool
-        var full: String { arrived ? "C’est le moment !" : "\(weeks) sem · \(days) j · \(hours) h · \(minutes) min" }
-        var compact: String { arrived ? "♥" : "\(weeks)s \(days)j\n\(hours)h \(minutes)m" }
+        var full: String { arrived ? L10n.text("countdown.arrived") : L10n.format("countdown.full", weeks, days, hours, minutes) }
+        var compact: String { arrived ? "♥" : L10n.format("countdown.compact", weeks, days, hours, minutes) }
     }
     @Published private(set) var target: Target?
     private let defaults: UserDefaults?

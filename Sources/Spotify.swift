@@ -4,7 +4,7 @@ import ImageIO
 
 final class SpotifyModel: ObservableObject {
     @Published var title = "Spotify"
-    @Published var artist = "Lance un morceau pour commencer"
+    @Published var artist = L10n.text("spotify.start")
     @Published var artwork: NSImage?
     @Published var playing = false
     @Published var available = false
@@ -32,8 +32,8 @@ final class SpotifyModel: ObservableObject {
     init(demo: Bool) {
         self.demo = demo
         if demo {
-            title = "Aperçu du lecteur"
-            artist = "Simulation · aucune lecture Spotify"
+            title = L10n.text("demo.player")
+            artist = L10n.text("demo.track")
             duration = 240
             position = 94
             playing = true
@@ -117,8 +117,8 @@ final class SpotifyModel: ObservableObject {
             let code = (error[NSAppleScript.errorNumber] as? NSNumber)?.intValue ?? 0
             permissionDenied = code == -1743
             message = permissionDenied
-                ? "Autorise Spotify dans Réglages Système → Confidentialité et sécurité → Automatisation."
-                : "Spotify ne répond pas. Nouvelle tentative automatique."
+                ? L10n.text("spotify.permission")
+                : L10n.text("spotify.retrying")
             if playing { playing = false }
             if available { available = false }
             return nil
@@ -134,8 +134,7 @@ final class SpotifyModel: ObservableObject {
         guard !permissionDenied else { return }
         spotifyRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: "com.spotify.client").isEmpty
         guard spotifyRunning else {
-            if title != "Spotify est fermé" { title = "Spotify est fermé" }
-            if artist != "Ouvre Spotify pour afficher ta musique" { artist = "Ouvre Spotify pour afficher ta musique" }
+            updateMetadata(title: L10n.text("spotify.closed"), artist: L10n.text("spotify.openHint"))
             if playing { playing = false }
             if available { available = false }
             if artwork != nil { artwork = nil }
@@ -160,8 +159,7 @@ final class SpotifyModel: ObservableObject {
         guard result.numberOfItems == 6 else {
             if playing { playing = false }
             if available { available = false }
-            if title != "Aucun morceau" { title = "Aucun morceau" }
-            if artist != "Choisis une musique dans Spotify" { artist = "Choisis une musique dans Spotify" }
+            updateMetadata(title: L10n.text("spotify.noTrack"), artist: L10n.text("spotify.chooseTrack"))
             duration = 0
             position = 0
             if artwork != nil { artwork = nil }
@@ -169,20 +167,24 @@ final class SpotifyModel: ObservableObject {
             artworkTask?.cancel()
             return
         }
-        let newTitle = result.atIndex(2)?.stringValue ?? "Titre inconnu"
+        let newTitle = result.atIndex(2)?.stringValue ?? L10n.text("spotify.unknownTitle")
         let newArtist = result.atIndex(3)?.stringValue ?? ""
         let newPlaying = result.atIndex(1)?.stringValue == "playing"
         let newPosition = result.atIndex(5)?.doubleValue ?? 0
         // Le seek en pause doit redessiner la vue même sans horloge active.
         if !newPlaying && abs(newPosition - elapsed(at: Date())) > 0.1 { objectWillChange.send() }
-        if title != newTitle { title = newTitle }
-        if artist != newArtist { artist = newArtist }
+        updateMetadata(title: newTitle, artist: newArtist)
         duration = (result.atIndex(4)?.doubleValue ?? 0) / 1000
         position = newPosition
         sampledAt = Date()
         if playing != newPlaying { playing = newPlaying }
         if !available { available = true }
         loadArtwork(result.atIndex(6)?.stringValue ?? "")
+    }
+
+    private func updateMetadata(title: String, artist: String) {
+        if self.title != title { self.title = title }
+        if self.artist != artist { self.artist = artist }
     }
 
     private func loadArtwork(_ value: String) {

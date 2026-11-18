@@ -1,6 +1,12 @@
 # Development and handoff
 
-Status: November 13, 2026. Sources: user requests, source code and local checks. This project is self-contained; neighboring files are not required.
+## Notch multitools and localization — November 18, 2026
+
+The app is now branded Notch multitools to reflect its media, calendar, focus and countdown utilities. The build creates Notch multitools.app with a NotchMultitools executable. The existing bundle identifier and preference keys are retained so saved data carries forward.
+
+AppKit and SwiftUI share the localized string tables in the bundle. The preferred app language is selected by macOS. English is the development language and fallback, with French as the second supported language. The macOS permission descriptions are supplied separately in each language. User-supplied countdown labels, event titles and Spotify metadata are displayed as received.
+
+Sources: user requests, source code and local checks. This project is self-contained; neighboring files are not required.
 
 ## Confirmed requirements
 
@@ -75,7 +81,7 @@ The user requested a binary package for a GitHub release. [The packaging script]
 
 ## Screenshots
 
-The French UI command “Exporter des captures…” lets users choose a folder and export actual application views through AppKit's drawing cache: `contour.png`, `lecteur.png`, `apparence.png`. It does not capture other desktop windows or simulate playback input. Playback state and settings visibility are restored afterward. Documentation is English; existing UI labels and screenshot filenames retain their original language.
+The French UI command “Exporter des captures…” lets users choose a folder and export actual application views through AppKit's drawing cache: `contour.png`, `lecteur.png`, `apparence.png`. It does not capture other desktop windows or simulate playback input. Playback state and settings visibility are restored afterward. Screenshot filenames retain their original names in both interface languages.
 
 ## References
 

@@ -40,22 +40,22 @@ struct AppearanceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            Text("Apparence du contour").font(.title2.weight(.semibold))
-            Text("Les modifications s’appliquent immédiatement et sont conservées au prochain lancement.")
+            Text(L10n.text("appearance.title")).font(.title2.weight(.semibold))
+            Text(L10n.text("appearance.saved"))
                 .font(.callout).foregroundStyle(.secondary)
-            ColorPicker("Couleur de progression", selection: $appearance.color, supportsOpacity: false)
+            ColorPicker(L10n.text("appearance.color"), selection: $appearance.color, supportsOpacity: false)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Épaisseur du trait")
+                    Text(L10n.text("appearance.thickness"))
                     Spacer()
-                    Text(String(format: "%.1f pt", appearance.thickness)).monospacedDigit().foregroundStyle(.secondary)
+                    Text(L10n.format("appearance.points", appearance.thickness)).monospacedDigit().foregroundStyle(.secondary)
                 }
                 Slider(value: $appearance.thickness, in: 1...4, step: 0.1)
-                    .accessibilityLabel("Épaisseur du trait")
+                    .accessibilityLabel(L10n.text("appearance.thickness"))
             }
-            Text("Le contour suit l’épaisseur du trait avec 1 point de marge. Les petites zones de chaque côté de l’encoche affichent la jaquette ou l’activité en cours.")
+            Text(L10n.text("appearance.description"))
                 .font(.callout).foregroundStyle(.secondary)
-            Button("Rétablir les valeurs par défaut") { appearance.reset() }
+            Button(L10n.text("appearance.reset")) { appearance.reset() }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
@@ -65,5 +65,6 @@ struct AppearanceView: View {
         .frame(width: 420)
         .background(Color(nsColor: .windowBackgroundColor))
         .preferredColorScheme(.dark)
+        .environment(\.locale, L10n.locale)
     }
 }
