@@ -1,5 +1,22 @@
 # Validation
 
+## Notch multitools and localization — November 18, 2026
+
+The renamed arm64 application built successfully and passed 47 headless assertions in French, English, with French as the second macOS language preference, and with English as the fallback for German. The checks cover the translated tab names, countdown units in both display sizes, calendar accessibility text and localized permission descriptions read by the app. Both language tables contain the same 92 interface keys and three permission descriptions.
+
+The bundle identifier matches the previous build. Packaging the 0.5.0 arm64 bundle verified the signatures of the built and extracted app, reran the self-tests and verified the ZIP's SHA-256 checksum.
+
+Visual inspection in both languages, switching the language through System Settings, and the actual macOS permission dialogs and login item migration remain to be checked.
+
+## Idle countdown — November 18, 2026
+
+`bash build.sh` completed, then `'build/Notch Musique.app/Contents/MacOS/NotchMusique' --self-test` passed **43 assertions**. Twelve new checks cover initial absence, blank and bounded labels, weeks/days/hours/minutes decomposition, Spotify/focus/meeting priority, subminute rounding, exact and overdue deadlines, persisted restart/deletion behavior, and editor geometry. Tests use injected dates and an isolated temporary UserDefaults suite, without modifying the user's countdown. The existing simulated Spotify, image, seek, focus and geometry checks still pass.
+
+Actual `--screen-info` query: Built-in Retina Display, 1470 × 956 points, safe top inset 32 points, camera x=645.5…824.5 (179 points). Native demo renders were exported with this geometry and visually inspected for the editor, expanded idle summary and closed countdown. The two-line time stays in the right activity wing outside the camera; the label, date/time field, save/delete controls and four tabs fit the 360-point panel. The editor is approximately 253 points high and the idle summary approximately 201 points high. The fictional demo target was held only in nonpersistent storage. Examples were subsequently made neutral throughout the UI, demo, tests and documentation; the layout is unchanged. The regular running app was not stopped or replaced.
+
+These checks validate deterministic behavior and rendered layout. Live keyboard entry, date-field editing, save/delete clicks, real Spotify pause/resume switching with a configured countdown, sleep/wake, time-zone/DST changes and alternate hardware have not been manually exercised for this feature. No new calendar authorization or playback control was performed. Deadline calculations use absolute elapsed time; remaining minutes round up and stop at the arrived state. The countdown has no notification or alarm. Visible-only one-second clocks are implemented; their CPU/battery cost was not measured. Relaunch the built app to use the new version.
+
+
 ## Local release package 0.4.0 — November 13, 2026
 
 The user requested local tagging and packaging, with a local commit if needed. `bash package-release.sh` completed successfully: it ran `bash build.sh`, then the correctly quoted executable with `--self-test` (31 assertions passed), verified the ad hoc signature, created the ZIP, extracted it, verified the extracted signature, reran all 31 assertions successfully, and generated and verified the SHA-256 checksum. Shell syntax, Info.plist lint and `git diff --check` also passed. See [release files and notes](RELEASE.md).

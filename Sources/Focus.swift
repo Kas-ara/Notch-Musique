@@ -4,7 +4,7 @@ import Combine
 /// Wall-clock deadlines keep a session accurate across display sleep and delayed timer callbacks.
 final class FocusModel: ObservableObject {
     enum Phase: String { case focus, rest
-        var title: String { self == .focus ? "Focus" : "Pause" }
+        var title: String { self == .focus ? L10n.text("tab.focus") : L10n.text("focus.break") }
         var symbol: String { self == .focus ? "timer" : "cup.and.saucer.fill" }
     }
     @Published private(set) var phase: Phase = .focus

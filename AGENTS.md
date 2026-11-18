@@ -1,4 +1,4 @@
-# Instructions — Notch Musique
+# Instructions — Notch multitools
 
 - Read `README.md`, `docs/DEVELOPPEMENT.md` and `docs/VALIDATION.md` before continuing.
 - Write documentation in English, with relative local links.
@@ -6,4 +6,4 @@
 - Distinguish confirmed requests, proposals and actual validation.
 - Check compatibility with the selected music source and actual screen geometry; do not assume a universal API for other applications' media playback.
 - Do not accept licenses on the user's behalf.
-- Run `bash build.sh`, then `'build/Notch Musique.app/Contents/MacOS/NotchMusique' --self-test`, quoting the executable path correctly.
+- Run `bash build.sh`, then `'build/Notch multitools.app/Contents/MacOS/NotchMultitools' --self-test`, quoting the executable path correctly.

@@ -13,10 +13,10 @@ struct AgendaEvent: Identifiable {
 
     func subtitle(at now: Date = Date()) -> String {
         let day: String
-        if Calendar.current.isDateInToday(start) { day = "Aujourd’hui" }
-        else if Calendar.current.isDateInTomorrow(start) { day = "Demain" }
-        else { day = start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
-        let time = allDay ? "Journée entière" : start.formatted(date: .omitted, time: .shortened)
+        if Calendar.current.isDateInToday(start) { day = L10n.text("calendar.today") }
+        else if Calendar.current.isDateInTomorrow(start) { day = L10n.text("calendar.tomorrow") }
+        else { day = start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(L10n.locale)) }
+        let time = allDay ? L10n.text("calendar.allDay") : start.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(L10n.locale))
         return "\(day) · \(time) · \(calendar)"
     }
 }
@@ -40,7 +40,7 @@ final class CalendarModel: ObservableObject {
         if demo {
             access = .ready
             let now = Date()
-            events = [AgendaEvent(id: "demo", title: "Événement de démonstration", calendar: "Simulation",
+            events = [AgendaEvent(id: "demo", title: L10n.text("demo.event"), calendar: L10n.text("demo.badge"),
                                   start: now.addingTimeInterval(3600), end: now.addingTimeInterval(5400),
                                   allDay: false, color: .systemBlue)]
         } else {
@@ -117,7 +117,7 @@ final class CalendarModel: ObservableObject {
                 .prefix(50)
                 .enumerated().map { index, event in
                     AgendaEvent(id: "\(event.eventIdentifier ?? String(index))-\(event.startDate.timeIntervalSince1970)",
-                                title: event.title ?? "Sans titre", calendar: event.calendar.title,
+                                title: event.title ?? L10n.text("calendar.untitled"), calendar: event.calendar.title,
                                 start: event.startDate, end: event.endDate, allDay: event.isAllDay,
                                 color: NSColor(cgColor: event.calendar.cgColor) ?? .systemBlue)
                 }
