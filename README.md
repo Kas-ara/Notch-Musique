@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="Notch Musique logo" width="240">
+<img src="assets/logo.png" alt="Notch multitools logo" width="240">
 
-# 🎵 Notch Musique
+# 🎵 Notch multitools
 
 ### Your notch had room. We gave it a job.
 
@@ -16,8 +16,8 @@
 
 *Easy, developers: we love you. My wallet is just a little sensitive.*
 
-A compact glance around your notch shows Spotify artwork, an upcoming meeting, or your focus timer.
-Hover to open a small panel with **Media · Calendar · Focus**. Your camera now has three useful neighbors.
+A compact glance around your notch shows Spotify artwork, an upcoming meeting, your focus timer, or a personal countdown.
+Hover to open a small panel with **Media · Calendar · Focus · Countdown**.
 
 **Free · Open source · No subscription · No Spotify developer account**
 
@@ -51,7 +51,7 @@ Hover to open a small panel with **Media · Calendar · Focus**. Your camera now
 
 <img src="assets/screenshots/apparence.png" alt="Native contour color and thickness settings" width="440">
 
-*Screenshots are native application renders. Music views show real Spotify playback; the focus and calendar examples use demo mode and the calendar event is fictional. The application interface is in French.*
+*Screenshots are native application renders. Music views show real Spotify playback; the focus and calendar examples use demo mode and the calendar event is fictional. These screenshots show the French interface. The app is available in English and French.*
 
 </div>
 
@@ -65,6 +65,7 @@ Hover to open a small panel with **Media · Calendar · Focus**. Your camera now
 | 🎚️ | Seek through a track with the position slider. |
 | 📅 | Upcoming events from calendars configured in macOS, with opt-in access. |
 | ⏱️ | Automatic focus/break cycles, pause/resume, skip and saved duration choices. |
+| ⌛ | Personal countdown to a saved date and time when music is idle. |
 | 🎨 | Any color, with stroke thickness from 1 to 4 points. |
 | 📐 | Dimensions follow your actual notch and stroke thickness. |
 | 💾 | Settings survive a restart. |
@@ -73,7 +74,7 @@ Hover to open a small panel with **Media · Calendar · Focus**. Your camera now
 
 ## 🚀 Getting started
 
-You need **an Apple Silicon Mac with a notch**, **macOS 13 or later**, **Spotify desktop**, and **Apple's Command Line Tools** to compile. The build targets arm64; Intel support remains future work.
+You need **an Apple Silicon Mac with a notch** and **macOS 13 or later**. Install **Apple's Command Line Tools** to compile and **Spotify desktop** to use the media controls. The build targets arm64.
 
 ```sh
 # If Apple's tools are not installed:
@@ -81,35 +82,49 @@ xcode-select --install
 
 # From the project folder:
 bash build.sh
-open 'build/Notch Musique.app'
+open 'build/Notch multitools.app'
 ```
 
 Play a track in Spotify, then hover over the notch or its activity wings. 🎶
-Use **Waveform icon → Ouvrir le panneau…** (Open panel) to open and pin it directly. The pin button restores hover behavior when unselected.
+Use **Waveform icon → Open Panel…** (Ouvrir le panneau…) to open and pin it directly. The pin button restores hover behavior when unselected.
 
-macOS may ask for permission to control Spotify, used to read track information and send playback commands. If denied, open **System Settings → Privacy & Security → Automation**, then choose **Réessayer la connexion Spotify** (retry Spotify connection) from the waveform menu.
+macOS may ask for permission to control Spotify, used to read track information and send playback commands. If denied, open **System Settings → Privacy & Security → Automation**, then choose **Retry Spotify Connection** (Réessayer la connexion Spotify) from the waveform menu.
 
 The build is locally signed without Apple notarization. Run `bash package-release.sh` to prepare a ZIP and checksum for a GitHub release; see [release packaging](docs/RELEASE.md). For local updates, quit the old instance before rebuilding and relaunching.
 
+## Language
+
+Notch multitools follows the macOS language preferences and defaults to English when the preferred languages do not include English or French. To choose a language just for the app, add **Notch multitools** under **System Settings → General → Language & Region → Applications**, then reopen it. In French macOS, the path is **Réglages Système → Général → Langue et région → Applications**.
+
+If upgrading from Notch Musique, quit the old app before opening the renamed build. The bundle identifier is shared so the renamed app can read the saved appearance, focus durations and countdown.
+
 ## 🎨 Make yourself at home
 
-**Waveform icon → Apparence…** (Appearance)
+**Waveform icon → Appearance…** (Apparence…)
 
 Choose a color and thickness. The contour follows **stroke thickness + 1 point of padding**, with small wings beside the measured camera area for artwork and activity status. The open panel is normally 360 points wide, bounded by the actual screen edges.
 
 Changes apply immediately. Color and thickness are saved locally. The menu also lets you hide the contour or quit.
 
-Enable **Waveform icon → Démarrer avec le système** (Launch at login) to start Notch Musique automatically when you sign in. Select it again to disable it. If macOS requires approval, the menu offers access to System Settings → General → Login Items. Keep the app in a stable location before enabling this option; if you move it, disable and enable it again from the new location. The option reflects macOS's actual status and is only checked when enabled.
+Enable **Waveform icon → Launch at Login** (Démarrer avec le système) to start Notch multitools automatically when you sign in. Select it again to disable it. If macOS requires approval, the menu offers access to System Settings → General → Login Items. Keep the app in a stable location before enabling this option; if you move it, disable and enable it again from the new location. The option reflects macOS's actual status and is only checked when enabled.
 
-To share the result, **Notch Musique menu → Exporter des captures…** (Export screenshots) saves three PNG views in your chosen folder without capturing other desktop windows.
+To share the result, **Notch multitools menu → Export Screenshots…** (Exporter des captures…) saves three PNG views in your chosen folder without capturing other desktop windows.
 
 ## ⏱️ Focus and calendar
 
-Open **Focus → Démarrer** (Start) for the default **25-minute focus / 5-minute break** cycle. Phases advance automatically. Pause/resume, skip to the next phase, or reset the session. Choose **15/5**, **25/5**, **50/10**, or separate durations under **Durées…** while idle; reset an active session before changing them. Durations are saved. Quitting ends the session, while hiding the panel or sleeping the display lets time continue and catches up on return. A system beep announces a phase change while the app is visible. This timer does not enable macOS's system Focus mode or block other apps.
+Open **Focus → Start** (Démarrer) for the default **25-minute focus / 5-minute break** cycle. Phases advance automatically. Pause/resume, skip to the next phase, or reset the session. Choose **15/5**, **25/5**, **50/10**, or separate durations under **Durations…** (Durées…) while idle; reset an active session before changing them. Durations are saved. Quitting ends the session, while hiding the panel or sleeping the display lets time continue and catches up on return. A system beep announces a phase change while the app is visible. This timer does not enable macOS's system Focus mode or block other apps.
 
 The closed notch shows the active focus's icon and remaining time, including when paused. Otherwise, an ongoing meeting or one starting within 15 minutes takes priority over music; without one, Spotify artwork and playback status remain visible.
 
-Open **Calendrier → Connecter le calendrier** (Connect calendar) to request access. Notch Musique displays the next seven days of events from accounts configured in macOS Calendar, such as iCloud or Google. The app only reads events; macOS calls the required permission full calendar access on macOS 14+. It does not modify events, read reminders or store event titles on disk. Denying access leaves the music player and timer usable. Enable the Calendar account in macOS first; a Google or Outlook website alone is insufficient.
+Open **Calendar → Connect Calendar** (Calendrier → Connecter le calendrier) to request access. Notch multitools displays the next seven days of events from accounts configured in macOS Calendar, such as iCloud or Google. The app only reads events; macOS calls the required permission full calendar access on macOS 14+. It does not modify events, read reminders or store event titles on disk. Denying access leaves the music player and timer usable. Enable the Calendar account in macOS first; a Google or Outlook website alone is insufficient.
+
+## ♥ Countdown to someone or something
+
+When Spotify is paused or closed, the notch can show a personal countdown. Open the panel and select the **hourglass tab**. Enter a short label (up to 40 characters), such as “Summer holiday”, choose a future date and time, and select **Save** (Enregistrer). The editor stays pinned while you type; unpin it afterward to restore hover behavior.
+
+The closed notch shows weeks/days and hours/minutes in its activity wings. Open Media while music is idle to see the label, full remaining time and target date. Active Focus and imminent meetings retain priority; Spotify playback brings back the music view. The label and deadline survive restarting the app. Use **Edit…** (Modifier…) or the hourglass tab to change them, or **Delete** (Supprimer) to remove the countdown. At the deadline it shows “The wait is over!” (“C’est le moment !”) until edited or removed. There is no notification or alarm.
+
+The target uses the local date and time selected when saving, then follows that absolute instant across sleep, restart and time-zone changes. Weeks and days mean elapsed durations of seven days and 24 hours; daylight-saving changes can therefore differ from calendar-day counts. Remaining minutes round up.
 
 ## 🪶 What about resource use?
 
@@ -128,7 +143,7 @@ No microphone, audio recording, account signup or Spotify API key. The app commu
 Quit any existing instance, then run:
 
 ```sh
-open 'build/Notch Musique.app' --args --demo
+open 'build/Notch multitools.app' --args --demo
 ```
 
 Demo mode shows a fictional track, clearly marked as simulated, without contacting Spotify. Quit it before relaunching normally.
@@ -137,7 +152,7 @@ For local checks:
 
 ```sh
 bash build.sh
-'build/Notch Musique.app/Contents/MacOS/NotchMusique' --self-test
+'build/Notch multitools.app/Contents/MacOS/NotchMultitools' --self-test
 ```
 
 ## 🚧 The fine print

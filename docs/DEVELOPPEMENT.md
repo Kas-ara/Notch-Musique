@@ -1,6 +1,12 @@
 # Development and handoff
 
-Status: November 13, 2026. Sources: user requests, source code and local checks. This project is self-contained; neighboring files are not required.
+## Notch multitools and localization — November 18, 2026
+
+The app is now branded Notch multitools to reflect its media, calendar, focus and countdown utilities. The build creates Notch multitools.app with a NotchMultitools executable. The existing bundle identifier and preference keys are retained so saved data carries forward.
+
+AppKit and SwiftUI share the localized string tables in the bundle. The preferred app language is selected by macOS. English is the development language and fallback, with French as the second supported language. The macOS permission descriptions are supplied separately in each language. User-supplied countdown labels, event titles and Spotify metadata are displayed as received.
+
+Sources: user requests, source code and local checks. This project is self-contained; neighboring files are not required.
 
 ## Confirmed requirements
 
@@ -75,7 +81,7 @@ The user requested a binary package for a GitHub release. [The packaging script]
 
 ## Screenshots
 
-The French UI command “Exporter des captures…” lets users choose a folder and export actual application views through AppKit's drawing cache: `contour.png`, `lecteur.png`, `apparence.png`. It does not capture other desktop windows or simulate playback input. Playback state and settings visibility are restored afterward. Documentation is English; existing UI labels and screenshot filenames retain their original language.
+The French UI command “Exporter des captures…” lets users choose a folder and export actual application views through AppKit's drawing cache: `contour.png`, `lecteur.png`, `apparence.png`. It does not capture other desktop windows or simulate playback input. Playback state and settings visibility are restored afterward. Screenshot filenames retain their original names in both interface languages.
 
 ## References
 
@@ -88,3 +94,15 @@ The French UI command “Exporter des captures…” lets users choose a folder 
 - [Display sleep notification](https://developer.apple.com/documentation/appkit/nsworkspace/screensdidsleepnotification).
 - [ImageIO downsampling, WWDC 2018](https://devstreaming-cdn.apple.com/videos/wwdc/2018/219mybpx95zm9x/219/219_image_and_graphics_best_practices.pdf).
 - Installed Spotify application's AppleScript dictionary and playback change signal.
+
+## Idle countdown — November 18, 2026
+
+**Distribution decision:** the user is considering publication as a general countdown feature. Use neutral examples in UI placeholders, demos, tests and documentation; keep personal names out of distributable project content. Publication remains undecided. No push, release or new release package has been requested or performed.
+
+Confirmed request: show a countdown when no music is playing, with a manually entered short label (for example an upcoming holiday), a target date/time, and weeks/days/hours remaining. Implemented in `Sources/Countdown.swift` and the hourglass tab. No personal deadline was assumed or saved during development.
+
+The saved Codable target contains a trimmed label of up to 40 characters and an absolute Date in UserDefaults (`countdown.target`). Save validates a nonblank label; the editor requires a future date. Persisted elapsed targets stay visible with an arrived message until removed. The media tab substitutes the countdown summary while idle. Closed priority is unchanged for Focus and imminent meetings, followed by playing Spotify, then the configured countdown, then idle media. Spotify desktop remains the only supported music source: playback in other apps cannot suppress the countdown.
+
+The compact countdown uses two lines inside the existing 54-point right wing and a heart in the left wing, without changing camera clearance. The fourth tab uses an hourglass icon to retain the 360-point panel width. The editor adds 218 points below the physical notch and respects screen bounds. Its fields pin the panel; `NotchPanel` now permits becoming key so text and date input can work in the nonactivating panel. Countdown clocks use visible-only one-second TimelineViews; remaining time is derived from the deadline, without a background countdown timer. Demo targets use nonpersistent storage. Native demo preview mode may run alongside the regular app solely to export renders without stopping playback.
+
+See [validation](VALIDATION.md) for actual checks and limitations.

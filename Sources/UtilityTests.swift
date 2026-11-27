@@ -44,12 +44,52 @@ func runUtilitySelfTests() -> Int {
     focus.configure(work: -2, rest: 200)
     check(focus.workMinutes == 1 && focus.breakMinutes == 60, "Durations must stay bounded")
 
+    let countdown = CountdownModel(defaults: nil)
+    check(!countdown.showsWhenIdle(playing: false, focusStarted: false, meeting: false), "No countdown until explicitly configured")
+    check(!countdown.save(label: "  ", date: start), "Blank labels must be rejected")
+    countdown.save(label: "  Vacances  ", date: start.addingTimeInterval(9 * 86400 + 3 * 3600 + 120))
+    let remaining = countdown.remaining(at: start)
+    check(countdown.target?.label == "Vacances" && remaining.weeks == 1 && remaining.days == 2 && remaining.hours == 3 && remaining.minutes == 2, "Countdown must trim label and decompose elapsed-duration weeks/days/hours/minutes")
+    check(countdown.showsWhenIdle(playing: false, focusStarted: false, meeting: false), "Paused or closed Spotify must show configured countdown")
+    check(!countdown.showsWhenIdle(playing: true, focusStarted: false, meeting: false), "Playing Spotify must retain media")
+    check(!countdown.showsWhenIdle(playing: false, focusStarted: true, meeting: false) && !countdown.showsWhenIdle(playing: false, focusStarted: false, meeting: true), "Focus and meeting must retain priority")
+    countdown.save(label: "Holiday", date: start.addingTimeInterval(1))
+    check(countdown.remaining(at: start).minutes == 1 && !countdown.remaining(at: start).arrived, "A future target must not appear arrived when under one minute away")
+    check(countdown.remaining(at: start.addingTimeInterval(1)).arrived && countdown.remaining(at: start.addingTimeInterval(100000)).weeks == 0, "Exact deadline and overdue targets must stop at zero")
+    countdown.save(label: String(repeating: "a", count: 80), date: start)
+    check(countdown.target?.label.count == 40, "Label length must stay bounded")
+    let suiteName = "local.notchmusique.countdown-test.\(UUID().uuidString)"
+    let isolated = UserDefaults(suiteName: suiteName)!
+    defer { isolated.removePersistentDomain(forName: suiteName) }
+    let savedCountdown = CountdownModel(defaults: isolated)
+    savedCountdown.save(label: "Holiday", date: start)
+    check(CountdownModel(defaults: isolated).target == savedCountdown.target, "Countdown must survive restart, including overdue targets")
+    savedCountdown.clear()
+    check(CountdownModel(defaults: isolated).target == nil, "Deleting a countdown must also remove its stored target")
+
+    let french = L10n.language == "fr"
+    check(NotchLayout.Tab.calendar.title == (french ? "Calendrier" : "Calendar")
+          && NotchLayout.Tab.countdown.title == (french ? "Compte à rebours" : "Countdown"),
+          "Tab labels must use the preferred app language")
+    check(remaining.full == (french ? "1 sem · 2 j · 3 h · 2 min" : "1 wk · 2 d · 3 h · 2 min")
+          && remaining.compact == (french ? "1s 2j\n3h 2m" : "1w 2d\n3h 2m"),
+          "Both countdown formats must preserve their values and localize their units")
+    check(L10n.format("calendar.glance", "Test") == (french ? "Prochain événement : Test" : "Next event: Test"),
+          "Calendar accessibility labels must interpolate the event title")
+    let permission = Bundle.main.object(forInfoDictionaryKey: "NSCalendarsFullAccessUsageDescription") as? String
+    let spotifyPermission = Bundle.main.object(forInfoDictionaryKey: "NSAppleEventsUsageDescription") as? String
+    check(permission?.hasPrefix(french ? "Notch multitools affiche" : "Notch multitools shows") == true
+          && spotifyPermission?.hasPrefix(french ? "Notch multitools lit" : "Notch multitools reads") == true,
+          "Permission descriptions must use the preferred app language")
+
     let layout = NotchLayout()
     layout.configure(notchWidth: 190, notchHeight: 32, margin: 3,
                      availableWidth: 1424, availableHeight: 876)
     check(layout.width == 304 && layout.height == 35, "Idle geometry must fit camera plus activity wings")
     check(layout.width - 2 * layout.wingWidth - 6 == layout.notchWidth, "Activity wings must not overlap the physical camera")
     check(layout.expandedWidth == 360 && layout.expandedHeight == 201, "Media panel must stay compact")
+    layout.tab = .countdown
+    check(layout.expandedWidth == 360 && layout.expandedHeight == 253, "Countdown editor must retain compact width and bounded height")
     layout.tab = .calendar
     check(layout.expandedHeight == 233, "Calendar must get only its bounded list height")
     layout.configure(notchWidth: 190, notchHeight: 32, margin: 3,

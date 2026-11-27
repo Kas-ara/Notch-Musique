@@ -1,4 +1,4 @@
-# Notch Musique logo
+# Notch multitools logo
 
 Created November 13, 2026 at the user's request with the built-in imagegen tool. Final asset: [logo.png](logo.png), 1254 × 1254 RGBA PNG with an alpha channel. Original branding for this project, without Apple or Spotify logos.
 

@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "Notch multitools reads the current Spotify track and lets you control playback from the notch.";
+"NSCalendarsUsageDescription" = "Notch multitools shows upcoming events from the calendars set up on this Mac. It does not modify events.";
+"NSCalendarsFullAccessUsageDescription" = "Notch multitools shows upcoming events from the calendars set up on this Mac. It does not modify events.";
